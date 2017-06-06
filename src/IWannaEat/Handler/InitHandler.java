@@ -1,52 +1,10 @@
-package IWannaEat;
+package IWannaEat.Handler;
 
 import java.io.*;
 import java.net.*;
 import java.util.*;
-class Member implements Serializable{
-	private String id;
-	private String password;
-	private String name;
-	private String phone;
-	private String type;
-	private Date pdate;
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
-	public String getPassword() {
-		return password;
-	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getPhone() {
-		return phone;
-	}
-	public void setPhone(String phone) {
-		this.phone = phone;
-	}
-	public String getType() {
-		return type;
-	}
-	public void setType(String type) {  
-		this.type = type;
-	}
-	public Date getPdate() {
-		return pdate;
-	}
-	public void setPdate(Date pdate) {
-		this.pdate = pdate;
-	}
-}
+
+import IWannaEat.info.Member;
 
 /*
  * class : InitHandler 
@@ -123,7 +81,6 @@ public class InitHandler implements Runnable {
 			while (!Thread.interrupted()) {
 				String message = dataIn.readUTF();
 				String outmessage = null;
-				String success = null; // 성공 여부
 				try {
 					
 				// 이 프로그램에서는 생성된 소켓을 가지고 스트림을 구성하였으며 
@@ -138,6 +95,12 @@ public class InitHandler implements Runnable {
 				// 구분자 “|”를 가지는 StringTokenizer형 객체를 생성합니다.
 					StringTokenizer stk = new StringTokenizer(message, "|");
 					String action = new String(stk.nextToken());
+				// 회원 정보 관련 String	
+					String success = "fail"; // 성공 여부
+					String type = null;	//손님, 가게
+					String path = null; // 파일 경로
+					String fList []; // 파일 리스트
+					boolean check = false;
 					
 				// 회원가입 실행 시 :
 					if(action.equals("회원가입")){
@@ -151,41 +114,87 @@ public class InitHandler implements Runnable {
 						member.setPdate(new Date());
 						System.out.println("member 객체에 저장");
 					// TODO: 핸들러 변경 타이밍 확인, 넘겨줄 정보 더 없나 확인, 핸들러에서 받을 정보 확인 ,, 로그인도 마찬가지
-					// TODO: dataout이 제대로 되지 않는다 수정, 이미 id.txt파일이 있을경우 처리문 생성
 					// 서버에 클라이언트가 보내온 정보를 해당 id.txt파일에 객체로 저장
 						try{
-							System.out.println(member.getId() + ".txt 생성");
-							ObjectOutputStream oos1 = new ObjectOutputStream(new FileOutputStream(member.getId()+".txt"));
-							success = "success";
-							outmessage = member.getType() + "|" + success;
-							oos1.writeObject(member);
-							change_handler(member.getType());
-							oos1.close();
+							// id.txt파일이 있는지 판단 과정
+							File dir = new File("./src/IWannaEat/info/id");
+							//디렉토리가 없으면 생성
+							if(dir.exists()==false){
+								dir.mkdir();
+							}
+							//디렉토리 안에 있는 리스트 가져오기
+							fList =dir.list();
+							
+							String pt =member.getId()+".txt";
+							for(int i=0;i<fList.length;i++){
+								if(pt.equals(fList[i])){
+									//등록된 사용자면 true반환 미등록 사용자면 false
+									check=true;
+								}
+							}
+							
+							// check == false 즉, 회원가입 안된 id를 가입시켜줌
+							if (!check){
+								path = "./src/IWannaEat/info/id/" + member.getId() + ".txt";
+								System.out.println(member.getId() + ".txt 생성");
+								ObjectOutputStream oos1 = new ObjectOutputStream(new FileOutputStream(path));
+								outmessage = success = "success";
+								oos1.writeObject(member);
+								oos1.close();
+							}
+							else{
+								//TODO: 이미 가입한 ID입니다.
+							}
 						}catch (EOFException ee){
 							System.out.println("출력 스트림을 닫아주세요.");
 							ee.printStackTrace();
 						}catch (IOException ie) {
-							message = success = "fail";
 							ie.printStackTrace();
 						}
+						System.out.println("data out");
+						dataOut.writeUTF(outmessage);
+						// 출력스트림의 버퍼를 비워 바로 전송
+						dataOut.flush();
 					}
 					else if (action.equals("로그인")){
 						String id = stk.nextToken();
 						String password = stk.nextToken();
+						File rdir = new File("./src/IWannaEat/info/uplist"); //로그인한 가게 리스트 저장 디렉토리
+						
+						if(rdir.exists()==false){
+							rdir.mkdir();
+						}
+						path = "./src/IWannaEat/info/id/" + id + ".txt";
+						
+						
 						try{
-							ObjectInputStream ois = new ObjectInputStream(new FileInputStream(id + ".txt"));
+							ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path));
 							Member member = (Member)ois.readObject();
+							//TODO : 타입이 restaurant 인지 client인지에 따라 보내주는 정보가 다르게 처리
 							if(member.getId().equals(id) && member.getPassword().equals(password)){
+								type = member.getType();
 								success = "success";
-								outmessage = member.getType() + "|" + success; 
+								outmessage = success + "|" + type +"|" + member.getName();
+								System.out.println(success + " : " + outmessage);
+								// 가게일 경우 리스트에 등록 --> 회원이 볼 수 있는 리스트
+								// TODO : name으로 저장할 경우 불러오고 선택 시 판단하지를 못함
+								if(type == "Restaurant"){
+									File rtListFile = new File("./src/IWannaEat/info/uplist/" + member.getName() + ".list");
+								}
 							}
 							else
-								outmessage = success = "fail";
+								outmessage = success;
+							
 							dataOut.writeUTF(outmessage);
-							change_handler(member.getType());
+							dataOut.flush();
+							
+							if(success == "success"){
+								change_handler(socket, member.getType(), member.getId());
+							}
 							ois.close();
 						} catch(FileNotFoundException e){
 							System.out.println(e + "파일을 찾을 수 없습니다.");
+							//TODO : 회원가입을 해주세용
 							e.printStackTrace();
 						} catch (IOException ie) {
 							ie.printStackTrace();
@@ -207,38 +216,18 @@ public class InitHandler implements Runnable {
 		}
 	}
 	
-	public void change_handler(String type){
-		/*
-		ServerSocket server = new ServerSocket(8080);
-		System.out.println("Server Started..!!!");
-		if(type.equals("restaurant")){
-			// 다수의 클라이언트의 접속을 받아드리기 위해서 무한반복 수행.
-			while (true) {
-				// 클라이언트의 접속을 대기.
-				// 클라이언트가 접속하면 Socket의 객체 client를 생성.
-			Socket client = server.accept();
-			// 접속한 클라이언트의 정보를 출력.
-			System.out.println("Accepted from: " + client.getInetAddress());
-			// 클라이언트 socket객체를 인자로 ClientHandler형 객체를 생성.
-			RestaurantHandler rhandler = new RestaurantHandler(client);
+	public void change_handler(Socket socket, String type, String id){
+		// 타입에 따라 소켓을 매개변수로 해당 핸들러 객체 생성
+		if(type.equals("Restaurant")){
+			//RestaurantHandler rhandler = new RestaurantHandler(socket, id);
 			// Restauranthandler의 init() 메소드를 호출.
-			rhandler.init();
-			}
+			//rhandler.init();
 		}
-		else if(type.equals("client")){
-			// 다수의 클라이언트의 접속을 받아드리기 위해서 무한반복 수행.
-			while (true) {
-				// 클라이언트의 접속을 대기.
-				// 클라이언트가 접속하면 Socket의 객체 client를 생성.
-			Socket client = server.accept();
-			// 접속한 클라이언트의 정보를 출력.
-			System.out.println("Accepted from: " + client.getInetAddress());
-			// 클라이언트 socket객체를 인자로 ClientHandler형 객체를 생성.
-			ClientHandler chandler = new ClientHandler(client);
-			// Clienthandler의 init() 메소드를 호출.
-			chandler.init();
-			}
-		}*/
+		else if(type.equals("Guest")){
+			GuestHandler ghandler = new GuestHandler(socket, id);
+			// Guesthandler의 init() 메소드를 호출.
+			ghandler.init();
+		}
 	}
 }
 
