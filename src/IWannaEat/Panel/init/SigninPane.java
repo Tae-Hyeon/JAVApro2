@@ -57,7 +57,7 @@ public class SigninPane extends JPanel implements ActionListener{
 	private JLabel slabel1;
 	private JLabel slabel2;
 		
-	public SigninPane(InitClient init){
+	public SigninPane(InitClient init, Socket socket){
 		Init = init;
 	// main Panel 생성, 상단 - label, 중단 - RadioButton, ID, Password입력, 하단 - 버튼 layout 생성
 		smp = new JPanel();
@@ -135,7 +135,7 @@ public class SigninPane extends JPanel implements ActionListener{
 		try {
 			// ip, port를 인자로 Socket형 객체를 생성
 			// 사용자 환경에 따라 ip와 port값을 변경해서 사용
-			socket = new Socket("127.0.0.1", 8080);
+			this.socket = socket;
 			// 소켓으로부터 입력스트림을 획득
 			dataIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			// 소켓으로부터 출력스트림을 획득

@@ -20,6 +20,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import IWannaEat.main.InitClient;
+import IWannaEat.Panel.guest.GuestPane;
 
 public class Select extends JPanel implements ActionListener{
 	private InitClient Init;
@@ -39,9 +40,9 @@ public class Select extends JPanel implements ActionListener{
 	private JButton jbt2;
 	private JButton jbt3;
 	
-	public Select(InitClient init) {
+	public Select(InitClient init, Socket socket) {
 		try {
-			socket = new Socket("127.0.0.1", 8080);
+			this.socket = socket;
 			dataIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			dataOut = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		} catch (IOException ie) {
@@ -96,22 +97,26 @@ public class Select extends JPanel implements ActionListener{
 	public synchronized void uploadList(JComboBox cb) {
 		try {
 			//핸들러로부터 list를 받아 토큰을 이용해 구분하고 comboBox에 추가한다.
+			dataOut.writeUTF("upload");
+			dataOut.flush();
 			String message = dataIn.readUTF();
+			String item = null;
 			StringTokenizer stk = new StringTokenizer(message, "|");
 			int num = stk.countTokens();
 			check:
 			for (int i = 0; i < num; i++){
-				//항목의 반환형이 오브젝트의 참조값으로 반환되니 String으로 형변환 해줘야 합니다
-	            String str = (String)combo.getSelectedItem();
+				item = stk.nextToken();
 	            for(int j = 0; j < combo.getItemCount() ; j++)
 	            {
-	                if(((String)combo.getItemAt(j)).compareTo(str) == 0)
+	            	System.out.println(item +" : "+ combo.getItemAt(j).toString());
+		            String str = combo.getItemAt(j).toString();
+	                if(item.compareTo(str) == 0)
 	                {
 	                    //항목중 같은 이름이 있으면 추가하지 않습니다
 	                    continue check;
 	                }
 	            }
-	            combo.addItem(str); //일치하는 항목이 없으면 입력한 내용을 콤보박스 항목에 추가합니다
+               	combo.addItem(item); //일치하는 항목이 없으면 입력한 내용을 콤보박스 항목에 추가합니다
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -131,17 +136,31 @@ public class Select extends JPanel implements ActionListener{
 
 	@Override
 	public void actionPerformed(ActionEvent event) {
+		String message = null;
 		if(event.getActionCommand().equals("새로고침"))
         {
-            //TODO : handler에 스트림을 보내 pushList를 시키고 다시 패널에서 받아 uploadlist를 시킨다. 
+            uploadList(combo);
         }
 		else if(event.getActionCommand().equals("선택"))
         {
             //TODO : 가게 화면 cardlayout에 추가 및 들어가기
+			String restaurant = combo.getSelectedItem().toString(); 
+			message = "select" + "|" + restaurant;
+			try {
+				dataOut.writeUTF(message);
+				dataOut.flush();
+				Init.getContentPane().add(restaurant, new GuestPane(Init, socket));
+				Init.getCardLayout().show(Init.getContentPane(), restaurant);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
         }
 		else if(event.getActionCommand().equals("로그아웃"))
         {
-            //TODO : 로그아웃 ( 패널 dispose?? cardlayout에서 제거, loginpane으로 이동) 
+            //TODO : 로그아웃 ( 패널 dispose?? cardlayout에서 제거, loginpane으로 이동)
+			Init.dispose();
+			System.out.println("logout");
+			InitClient inc = new InitClient();
         }
 	}
 }

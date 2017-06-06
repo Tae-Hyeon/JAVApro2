@@ -47,7 +47,7 @@ public class LoginPane extends JPanel implements ActionListener{
 	private JLabel llabel1;
 	private JLabel llabel2;
 	
-	public LoginPane(InitClient init){
+	public LoginPane(InitClient init, Socket socket){
 		Init = init;
 		System.out.println("로그인 클라이언트 생성자 실행...");
 		// main Panel 생성, 상단 - label, 중단 - ID, Password입력, 하단 - 버튼 layout 생성
@@ -103,7 +103,7 @@ public class LoginPane extends JPanel implements ActionListener{
 		try {
 			// ip, port를 인자로 Socket형 객체를 생성
 			// 사용자 환경에 따라 ip와 port값을 변경해서 사용
-			socket = new Socket("127.0.0.1", 8080);
+			this.socket = socket;
 			// 소켓으로부터 입력스트림을 획득
 			dataIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			// 소켓으로부터 출력스트림을 획득
@@ -125,6 +125,7 @@ public class LoginPane extends JPanel implements ActionListener{
 		String success = null;
 		String Type = null;
 		String Name = null;
+		String isSet = null;
 		
 		String Action = null;
 		String ID = null;
@@ -162,28 +163,40 @@ public class LoginPane extends JPanel implements ActionListener{
 				message = dataIn.readUTF();
 				StringTokenizer stk = new StringTokenizer(message, "|");
 				success = stk.nextToken();
-				Type = stk.nextToken(); 
-				Name = stk.nextToken();
-				
+					
 				System.out.println("로그인 : " + success);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			if(success.equals("success")){
-				if (Type.equals("Guest")){
-					//TODO: 로그인 완료 -- 손님 객체 생성 cardLayout에 추가
-					System.out.println("guest panel 생성...");
-					Init.getContentPane().add("Select", new Select(Init));
-					Init.getCardLayout().show(Init.getContentPane(), "Select");
+				if(success.equals("success")){
+					Type = stk.nextToken(); 
+					Name = stk.nextToken();
+					if (Type.equals("Guest")){
+						//TODO: 로그인 완료 -- 손님 객체 생성 cardLayout에 추가
+						System.out.println("guest panel 생성...");
+						Init.getContentPane().add("Select", new Select(Init, socket));
+						Init.getCardLayout().show(Init.getContentPane(), "Select");
+					}
+					else if (Type.equals("Restaurant")){
+						//TODO: 로그인 완료 -- 가게 객체 생성  xx option이 있는지 없는지도 스트림으로 받아서 그것에 따라 생성 처리
+						//isSet = stk.nextToken();
+						//if(isSet.equals("setted"){
+						//	Init.getContentPane().add("Restaurant", new RestaurantClient(this, socket));
+						//	Init.getCardLayout().show(Init.getContentPane(), "Restaurant");
+						//}
+						//else if(isSet.equals("not setted"){
+						//	Init.getContentPane().add("FirstSet", new FirstSet(this, socket))
+						//	Init.getCardLayout().show(Init.getContentPane(), "FirstSet");
+						//}
+					}
 				}
-				else if (Type.equals("Restaurant")){
-					//TODO: 로그인 완료 -- 가게 객체 생성
-					//Init.getContentPane().add("Restaurant", new RestaurantClient(this));
-					//Init.getCardLayout().show(Init.getContentPane(), "Restaurant");
+				else if (success.equals("fail")){
+					//TODO: 실패
+					llabel2.setText("비밀번호를 확인해 주세요.");
 				}
-			}
-			else if (success.equals("fail")){
-				//TODO: 실패
+				else if (success.equals("none")){
+					//id가 없을 경우
+					llabel2.setText("회원가입을 해주세요!!");
+				}
+			}catch (IOException e){
+				System.out.println("Error : " + e.toString());
 			}
 		}
 		

@@ -77,133 +77,144 @@ public class InitHandler implements Runnable {
 	public void run() {
 		
 		try {
-			
+			boolean changed = false;
 			while (!Thread.interrupted()) {
-				String message = dataIn.readUTF();
-				String outmessage = null;
-				try {
-					
-				// 이 프로그램에서는 생성된 소켓을 가지고 스트림을 구성하였으며 
-				// 클라이언트 에서 보내어진 자료를 한 줄씩 읽어 들이는 작업 수행.
-				// 아직 클라이언트에 대한 프로그램을 작성하지는 않았지만
-		                    // 클라이언트에서 보내어지는 여러 가지 정보는 각각의 정보에
-		                    // 대해 구분자 '|'를 두고 한 줄로 보냄.
-				// 따라서 서버의 스레드 프로그램에서는 구분자를 찾아내어 한 줄에 
-				// 모두 포함되어 있는 정보를 각각 분리해 내는 작업을 수행. 
-				// 이러한 작업을 파싱이라고 함.	
-							
-				// 구분자 “|”를 가지는 StringTokenizer형 객체를 생성합니다.
-					StringTokenizer stk = new StringTokenizer(message, "|");
-					String action = new String(stk.nextToken());
-				// 회원 정보 관련 String	
-					String success = "fail"; // 성공 여부
-					String type = null;	//손님, 가게
-					String path = null; // 파일 경로
-					String fList []; // 파일 리스트
-					boolean check = false;
-					
-				// 회원가입 실행 시 :
-					if(action.equals("회원가입")){
-						Member member = new Member();
-					// nextToken() 메소드를 이용해 파싱한 토큰을 가져와 member 객체에 설정.
-						member.setType(stk.nextToken());
-						member.setId(stk.nextToken());
-						member.setPassword(stk.nextToken());
-						member.setName(stk.nextToken());
-						member.setPhone(stk.nextToken());
-						member.setPdate(new Date());
-						System.out.println("member 객체에 저장");
-					// TODO: 핸들러 변경 타이밍 확인, 넘겨줄 정보 더 없나 확인, 핸들러에서 받을 정보 확인 ,, 로그인도 마찬가지
-					// 서버에 클라이언트가 보내온 정보를 해당 id.txt파일에 객체로 저장
-						try{
-							// id.txt파일이 있는지 판단 과정
-							File dir = new File("./src/IWannaEat/info/id");
-							//디렉토리가 없으면 생성
-							if(dir.exists()==false){
-								dir.mkdir();
-							}
-							//디렉토리 안에 있는 리스트 가져오기
-							fList =dir.list();
-							
-							String pt =member.getId()+".txt";
-							for(int i=0;i<fList.length;i++){
-								if(pt.equals(fList[i])){
-									//등록된 사용자면 true반환 미등록 사용자면 false
-									check=true;
+				if(changed == false){
+					String message = dataIn.readUTF();
+					String outmessage = null;
+					try {
+						
+					// 이 프로그램에서는 생성된 소켓을 가지고 스트림을 구성하였으며 
+					// 클라이언트 에서 보내어진 자료를 한 줄씩 읽어 들이는 작업 수행.
+					// 아직 클라이언트에 대한 프로그램을 작성하지는 않았지만
+			                    // 클라이언트에서 보내어지는 여러 가지 정보는 각각의 정보에
+			                    // 대해 구분자 '|'를 두고 한 줄로 보냄.
+					// 따라서 서버의 스레드 프로그램에서는 구분자를 찾아내어 한 줄에 
+					// 모두 포함되어 있는 정보를 각각 분리해 내는 작업을 수행. 
+					// 이러한 작업을 파싱이라고 함.	
+								
+					// 구분자 “|”를 가지는 StringTokenizer형 객체를 생성합니다.
+						StringTokenizer stk = new StringTokenizer(message, "|");
+						String action = new String(stk.nextToken());
+					// 회원 정보 관련 String	
+						String success = "fail"; // 성공 여부
+						String type = null;	//손님, 가게
+						String path = null; // 파일 경로
+						String fList []; // 파일 리스트
+						boolean check = false;
+						
+					// 회원가입 실행 시 :
+						if(action.equals("회원가입")){
+							Member member = new Member();
+						// nextToken() 메소드를 이용해 파싱한 토큰을 가져와 member 객체에 설정.
+							member.setType(stk.nextToken());
+							member.setId(stk.nextToken());
+							member.setPassword(stk.nextToken());
+							member.setName(stk.nextToken());
+							member.setPhone(stk.nextToken());
+							member.setPdate(new Date());
+							System.out.println("member 객체에 저장");
+						// TODO: 핸들러 변경 타이밍 확인, 넘겨줄 정보 더 없나 확인, 핸들러에서 받을 정보 확인 ,, 로그인도 마찬가지
+						// 서버에 클라이언트가 보내온 정보를 해당 id.txt파일에 객체로 저장
+							try{
+								// id.txt파일이 있는지 판단 과정
+								File dir = new File("./src/IWannaEat/info/id");
+								//디렉토리가 없으면 생성
+								if(dir.exists()==false){
+									dir.mkdir();
 								}
-							}
-							
-							// check == false 즉, 회원가입 안된 id를 가입시켜줌
-							if (!check){
-								path = "./src/IWannaEat/info/id/" + member.getId() + ".txt";
-								System.out.println(member.getId() + ".txt 생성");
-								ObjectOutputStream oos1 = new ObjectOutputStream(new FileOutputStream(path));
-								outmessage = success = "success";
-								oos1.writeObject(member);
-								oos1.close();
-							}
-							else{
-								//TODO: 이미 가입한 ID입니다.
-							}
-						}catch (EOFException ee){
-							System.out.println("출력 스트림을 닫아주세요.");
-							ee.printStackTrace();
-						}catch (IOException ie) {
-							ie.printStackTrace();
-						}
-						System.out.println("data out");
-						dataOut.writeUTF(outmessage);
-						// 출력스트림의 버퍼를 비워 바로 전송
-						dataOut.flush();
-					}
-					else if (action.equals("로그인")){
-						String id = stk.nextToken();
-						String password = stk.nextToken();
-						File rdir = new File("./src/IWannaEat/info/uplist"); //로그인한 가게 리스트 저장 디렉토리
-						
-						if(rdir.exists()==false){
-							rdir.mkdir();
-						}
-						path = "./src/IWannaEat/info/id/" + id + ".txt";
-						
-						
-						try{
-							ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path));
-							Member member = (Member)ois.readObject();
-							//TODO : 타입이 restaurant 인지 client인지에 따라 보내주는 정보가 다르게 처리
-							if(member.getId().equals(id) && member.getPassword().equals(password)){
-								type = member.getType();
-								success = "success";
-								outmessage = success + "|" + type +"|" + member.getName();
-								System.out.println(success + " : " + outmessage);
-								// 가게일 경우 리스트에 등록 --> 회원이 볼 수 있는 리스트
-								// TODO : name으로 저장할 경우 불러오고 선택 시 판단하지를 못함
-								if(type == "Restaurant"){
-									File rtListFile = new File("./src/IWannaEat/info/uplist/" + member.getName() + ".list");
+								//디렉토리 안에 있는 리스트 가져오기
+								fList =dir.list();
+								
+								String pt =member.getId()+".txt";
+								for(int i=0;i<fList.length;i++){
+									if(pt.equals(fList[i])){
+										//등록된 사용자면 true반환 미등록 사용자면 false
+										check=true;
+									}
 								}
+								
+								// check == false 즉, 회원가입 안된 id를 가입시켜줌
+								if (!check){
+									path = "./src/IWannaEat/info/id/" + member.getId() + ".txt";
+									System.out.println(member.getId() + ".txt 생성");
+									ObjectOutputStream oos1 = new ObjectOutputStream(new FileOutputStream(path));
+									outmessage = success = "success";
+									oos1.writeObject(member);
+									oos1.close();
+								}
+								else{
+									//TODO: 이미 가입한 ID입니다.
+								}
+							}catch (EOFException ee){
+								System.out.println("출력 스트림을 닫아주세요.");
+								ee.printStackTrace();
+							}catch (IOException ie) {
+								ie.printStackTrace();
 							}
-							else
-								outmessage = success;
-							
+							System.out.println("data out");
 							dataOut.writeUTF(outmessage);
+							// 출력스트림의 버퍼를 비워 바로 전송
 							dataOut.flush();
-							
-							if(success == "success"){
-								change_handler(socket, member.getType(), member.getId());
-							}
-							ois.close();
-						} catch(FileNotFoundException e){
-							System.out.println(e + "파일을 찾을 수 없습니다.");
-							//TODO : 회원가입을 해주세용
-							e.printStackTrace();
-						} catch (IOException ie) {
-							ie.printStackTrace();
-						} catch (ClassNotFoundException e) {
-							e.printStackTrace();
 						}
+						else if (action.equals("로그인")){
+							String id = stk.nextToken();
+							String password = stk.nextToken();
+							File rdir = new File("./src/IWannaEat/info/uplist"); //로그인한 가게 리스트 저장 디렉토리
+							
+							if(rdir.exists()==false){
+								rdir.mkdir();
+							}
+							path = "./src/IWannaEat/info/id/" + id + ".txt";
+							
+							
+							try{
+								ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path));
+								Member member = (Member)ois.readObject();
+								//TODO : 타입이 restaurant 인지 client인지에 따라 보내주는 정보가 다르게 처리, Name으로넘길지 ID로 넘길지
+								if(member.getId().equals(id) && member.getPassword().equals(password)){
+									type = member.getType();
+									success = "success";
+									outmessage = success + "|" + type +"|" + member.getName();
+									System.out.println(success + " : " + outmessage);
+									//가게일 경우 
+									if(type == "Restaurant"){
+										String opPath = "./src/IWannaEat/info/option/" + member.getId() + ".option";
+										File opFile = new File(opPath);
+										if(opFile.exists()){
+											outmessage += "setted";
+										}
+										else{
+											outmessage += "not setted";
+										}
+									//	File rtListFile = new File("./src/IWannaEat/info/uplist/" + member.getName() + ".list");
+									}
+								}
+								else
+									outmessage = success;
+								
+								if(success == "success"){
+									changed = true;
+									change_handler(socket, member.getType(), member.getId());
+								}
+
+								dataOut.writeUTF(outmessage);
+								dataOut.flush();
+								ois.close();
+							} catch(FileNotFoundException e){
+								System.out.println(e + "파일을 찾을 수 없습니다.");
+								// 회원가입 유도
+								dataOut.writeUTF("none");
+								dataOut.flush();
+							} catch (IOException ie) {
+								ie.printStackTrace();
+							} catch (ClassNotFoundException e) {
+								e.printStackTrace();
+							}
+						}
+					} catch (NoSuchElementException e) {
+								stop();
 					}
-				} catch (NoSuchElementException e) {
-							stop();
 				}
 			}
 		} catch (EOFException ignored) {
@@ -216,7 +227,7 @@ public class InitHandler implements Runnable {
 		}
 	}
 	
-	public void change_handler(Socket socket, String type, String id){
+	public void change_handler(Socket socket, String type, String id) throws IOException{
 		// 타입에 따라 소켓을 매개변수로 해당 핸들러 객체 생성
 		if(type.equals("Restaurant")){
 			//RestaurantHandler rhandler = new RestaurantHandler(socket, id);

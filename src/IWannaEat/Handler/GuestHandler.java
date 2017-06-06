@@ -53,7 +53,6 @@ public class GuestHandler implements Runnable{
 				// this는 PizzaServer에서 생성된 handler 객체를 의미.
 				listener = new Thread(this);
 				listener.start();
-				pushList();
 			} catch (IOException ignored) {
 			}
 		}
@@ -85,9 +84,24 @@ public class GuestHandler implements Runnable{
 	public void run() {
 		
 		try {
+			String request = null;
+			String message = null;
+			String retaurant = null;
 			while (!Thread.interrupted()) {
-				
+				message = dataIn.readUTF();
+				StringTokenizer stk = new StringTokenizer(message, "|");
+				request = stk.nextToken();
+				if(request.equals("upload")){
+					pushList();
+				}
+				else if(request.equals("select")){
+					retaurant = stk.nextToken();
+					
+				}
 			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}finally {
 				stop();
 		}
@@ -110,5 +124,9 @@ public class GuestHandler implements Runnable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public void pushOption(){
+		
 	}
 }
