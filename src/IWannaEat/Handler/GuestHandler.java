@@ -84,17 +84,17 @@ public class GuestHandler implements Runnable{
 	public void run() {
 		
 		try {
-			String request = null;
+			String action = null;
 			String message = null;
 			String retaurant = null;
 			while (!Thread.interrupted()) {
 				message = dataIn.readUTF();
 				StringTokenizer stk = new StringTokenizer(message, "|");
-				request = stk.nextToken();
-				if(request.equals("upload")){
+				action = stk.nextToken();
+				if(action.equals("upload")){
 					pushList();
 				}
-				else if(request.equals("select")){
+				else if(action.equals("select")){
 					retaurant = stk.nextToken();
 					
 				}
@@ -108,7 +108,7 @@ public class GuestHandler implements Runnable{
 	}
 	
 	public void pushList(){
-		File listDir = new File("./src/test/uplist");
+		File listDir = new File("./src/IWannaEat/info/uplist");
 		String fList[] = listDir.list();
 		String message = new String();
 		for(int i=0;i<fList.length;i++){

@@ -175,23 +175,26 @@ public class InitHandler implements Runnable {
 								if(member.getId().equals(id) && member.getPassword().equals(password)){
 									type = member.getType();
 									success = "success";
-									outmessage = success + "|" + type +"|" + member.getName();
-									System.out.println(success + " : " + outmessage);
-									//가게일 경우 
-									if(type == "Restaurant"){
+									outmessage = success + "|" + type +"|" + member.getId();
+									
+									//가게일 경우  id.option이 설정되어있는지 아닌지 판단
+									if(type.equals("Restaurant")){
 										String opPath = "./src/IWannaEat/info/option/" + member.getId() + ".option";
 										File opFile = new File(opPath);
 										if(opFile.exists()){
-											outmessage += "setted";
+											outmessage += "|" + "setted";
 										}
 										else{
-											outmessage += "not setted";
+											outmessage += "|" + "not setted";
 										}
-									//	File rtListFile = new File("./src/IWannaEat/info/uplist/" + member.getName() + ".list");
+									//	File rtListFile = new File("./src/IWannaEat/info/uplist/" + member.getId() + ".list");
 									}
 								}
 								else
 									outmessage = success;
+								
+
+								System.out.println(success + " : " + outmessage);
 								
 								if(success == "success"){
 									changed = true;
@@ -230,9 +233,9 @@ public class InitHandler implements Runnable {
 	public void change_handler(Socket socket, String type, String id) throws IOException{
 		// 타입에 따라 소켓을 매개변수로 해당 핸들러 객체 생성
 		if(type.equals("Restaurant")){
-			//RestaurantHandler rhandler = new RestaurantHandler(socket, id);
+			RestaurantHandler rhandler = new RestaurantHandler(socket, id);
 			// Restauranthandler의 init() 메소드를 호출.
-			//rhandler.init();
+			rhandler.init();
 		}
 		else if(type.equals("Guest")){
 			GuestHandler ghandler = new GuestHandler(socket, id);

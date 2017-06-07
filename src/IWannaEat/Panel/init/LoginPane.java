@@ -19,6 +19,9 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import IWannaEat.Panel.guest.Select;
+import IWannaEat.Panel.restaurant.FirstSet;
+import IWannaEat.Panel.restaurant.RestaurantPane;
+import IWannaEat.Panel.restaurant.SetOption;
 import IWannaEat.main.InitClient;
 
 public class LoginPane extends JPanel implements ActionListener{
@@ -124,7 +127,6 @@ public class LoginPane extends JPanel implements ActionListener{
 		String message = null;
 		String success = null;
 		String Type = null;
-		String Name = null;
 		String isSet = null;
 		
 		String Action = null;
@@ -167,7 +169,7 @@ public class LoginPane extends JPanel implements ActionListener{
 				System.out.println("로그인 : " + success);
 				if(success.equals("success")){
 					Type = stk.nextToken(); 
-					Name = stk.nextToken();
+					ID = stk.nextToken();
 					if (Type.equals("Guest")){
 						//TODO: 로그인 완료 -- 손님 객체 생성 cardLayout에 추가
 						System.out.println("guest panel 생성...");
@@ -176,15 +178,16 @@ public class LoginPane extends JPanel implements ActionListener{
 					}
 					else if (Type.equals("Restaurant")){
 						//TODO: 로그인 완료 -- 가게 객체 생성  xx option이 있는지 없는지도 스트림으로 받아서 그것에 따라 생성 처리
-						//isSet = stk.nextToken();
-						//if(isSet.equals("setted"){
-						//	Init.getContentPane().add("Restaurant", new RestaurantClient(this, socket));
-						//	Init.getCardLayout().show(Init.getContentPane(), "Restaurant");
-						//}
-						//else if(isSet.equals("not setted"){
-						//	Init.getContentPane().add("FirstSet", new FirstSet(this, socket))
-						//	Init.getCardLayout().show(Init.getContentPane(), "FirstSet");
-						//}
+						isSet = stk.nextToken();
+						if(isSet.equals("setted")){
+							Init.getContentPane().add("SetOption", new SetOption(Init, socket));
+							Init.getContentPane().add("Restaurant", new RestaurantPane(Init, socket));
+							Init.getCardLayout().show(Init.getContentPane(), "Restaurant");
+						}
+						else if(isSet.equals("not setted")){
+							Init.getContentPane().add("FirstSet", new FirstSet(Init, socket));
+							Init.getCardLayout().show(Init.getContentPane(), "FirstSet");
+						}
 					}
 				}
 				else if (success.equals("fail")){

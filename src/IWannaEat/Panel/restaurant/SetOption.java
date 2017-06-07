@@ -115,7 +115,14 @@ public class SetOption extends JPanel implements ActionListener{
 		String message = null;
 		if(event.getActionCommand().equals("변경"))
         {
-            //TODO : dataOut을 통해 option update
+			message = "setoption" + "|" +combo.getSelectedItem().toString().split("x",-1)[0] + "|" + name.getText();
+			try {
+				dataOut.writeUTF(message);
+				dataOut.flush();
+			} catch (IOException e) {
+				System.out.println(message + "setoption fail");
+				e.printStackTrace();
+			}
 			Init.getCardLayout().show(Init.getContentPane(), "Restaurant");
         }
 		else if(event.getActionCommand().equals("취소"))
