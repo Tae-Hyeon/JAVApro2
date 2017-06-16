@@ -1,4 +1,4 @@
-package IWannaEat.Panel.restaurant;
+package test;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
@@ -22,7 +22,6 @@ import IWannaEat.main.InitClient;
 
 public class SetOption extends JPanel implements ActionListener{
 	private InitClient Init;
-	private RestaurantPane Res;
 	private Socket socket;
 	private DataInputStream dataIn;
 	private DataOutputStream dataOut;
@@ -42,7 +41,7 @@ public class SetOption extends JPanel implements ActionListener{
 	private JButton jbt1;
 	private JButton jbt2;
 	
-	public SetOption(InitClient init, Socket socket, RestaurantPane res){
+	public SetOption(InitClient init, Socket socket){
 		try {
 			this.socket = socket;
 			dataIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
@@ -53,8 +52,6 @@ public class SetOption extends JPanel implements ActionListener{
 		
 		//cardlayout에 넣기 위해 InitClient를 받는다
 		Init = init;
-		//cardlayout 추가 제거를 위한 RetaurantPane 객체
-		Res = res;
 		
 		label1 = new JLabel();
 		label1.setText("탁자 갯수");
@@ -119,7 +116,7 @@ public class SetOption extends JPanel implements ActionListener{
 		if(event.getActionCommand().equals("변경"))
         {
 			try {
-				dataOut.writeUTF("listDown");
+				dataOut.writeUTF("listdown");
 				dataOut.flush();
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
@@ -134,16 +131,12 @@ public class SetOption extends JPanel implements ActionListener{
 				e.printStackTrace();
 			}
 			try {
-				dataOut.writeUTF("listUp");
+				dataOut.writeUTF("listup");
 				dataOut.flush();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			Init.getContentPane().remove(Res);
-			Init.getContentPane().remove(this);
-			RestaurantPane res = new RestaurantPane(Init, socket);
-			Init.getContentPane().add("Restaurant", res);
 			Init.getCardLayout().show(Init.getContentPane(), "Restaurant");
         }
 		else if(event.getActionCommand().equals("취소"))

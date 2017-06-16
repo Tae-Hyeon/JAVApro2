@@ -1,7 +1,6 @@
-package IWannaEat.Panel.restaurant;
+package test;
 
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -33,8 +32,6 @@ public class RestaurantPane extends JPanel implements ActionListener, Colors{
 	private JPanel mpn; // message panel
 	private JPanel bpn; // button panel
 	
-	private CardLayout card;
-	
 	private JButton table[]; // table
 	private JButton setToggle; // table 수정용 button
 	private JButton chat; // message? chat 창
@@ -47,7 +44,6 @@ public class RestaurantPane extends JPanel implements ActionListener, Colors{
 	private int side = 0;
 	private int colors[];
 	private boolean toggle = true;
-	private boolean tablechanged = false;
 	
 	public RestaurantPane(InitClient init, Socket socket){
 		//처음 시작 설정
@@ -61,10 +57,10 @@ public class RestaurantPane extends JPanel implements ActionListener, Colors{
 		}
 		//상호명 리스트에 등록 요청
 		try{
-			dataOut.writeUTF("listUp");
+			dataOut.writeUTF("listup");
 			dataOut.flush();
 		} catch (IOException e) {
-			System.out.println("listUp 요청실패");
+			System.out.println("listup 요청실패");
 			e.printStackTrace();
 		}
 		//table옵션 요청
@@ -98,11 +94,18 @@ public class RestaurantPane extends JPanel implements ActionListener, Colors{
 		
 		
 		//tablePanel 구성
-		card = new CardLayout();
-		tpn = new JPanel(card);
-		tcard = new JPanel();
-		tcard.setLayout(new GridLayout(side,side,5,5));
-		makeTable();
+		tpn = new JPanel();
+		tpn.setLayout(new GridLayout(side,side,5,5));
+		System.out.println("making table...");
+		for(int i = 0; i < side*side; i++){
+			table[i] = new JButton ();
+			table[i].setEnabled(false); // 처음에 버튼 클릭으로 설정 불가능 하도록 설정, 변경버튼을 통해 On/Off
+			table[i].setText(Integer.toString(i) + "번 테이블");
+			table[i].addActionListener(this);
+			tpn.add(table[i]);
+		}
+		// table 색 설정
+		setTable(table, side, colors);
 		
 		System.out.println("setted Table's Color");
 		
@@ -128,8 +131,6 @@ public class RestaurantPane extends JPanel implements ActionListener, Colors{
 	}
 	public void stop(){
 		try {
-			dataOut.writeUTF("listDown");
-			dataOut.flush();
 			dataIn.close();
 			dataOut.close();
 			socket.close();
@@ -141,9 +142,7 @@ public class RestaurantPane extends JPanel implements ActionListener, Colors{
 	@Override
 	public void actionPerformed(ActionEvent event) {
 		if (event.getActionCommand().equals("*")) {
-			Init.getContentPane().add("SetOption", new SetOption(Init, socket, this));
 			Init.getCardLayout().show(Init.getContentPane(), "SetOption");
-			tablechanged=true;
 		}
 		else if (event.getActionCommand().equals("테이블 변경")) {
 			tableOnOff();
@@ -171,23 +170,6 @@ public class RestaurantPane extends JPanel implements ActionListener, Colors{
 		}
 	}
 	
-	public void getTableOption(){
-		try {
-			dataOut.writeUTF("getoption");
-			dataOut.flush();
-			message = dataIn.readUTF();
-			StringTokenizer stk = new StringTokenizer(message, "|");
-			side = Integer.parseInt(stk.nextToken());
-			colors = new int[side*side];
-			name = stk.nextToken();
-			for(int i = 0; i< side*side; i++)
-				colors[i] = Integer.parseInt(stk.nextToken());
-		} catch (IOException e) {
-			System.out.println("option 요청/불러오기 실패");
-			e.printStackTrace();
-		}
-	}
-	
 	public void setTable(JButton table[], int side, int color[]){
 		for(int i = 0; i < side*side; i++){
 			switch(color[i]){
@@ -210,11 +192,10 @@ public class RestaurantPane extends JPanel implements ActionListener, Colors{
 	}
 	
 	public void pushOption(){
-		message = "setTableOp" +"|"+ side + "|" + name;
+		message = "setTableOp" + side + "|" + name;
 		for(int i = 0; i < colors.length; i++)
 			message += "|" + Integer.toString(colors[i]); 
 		try {
-			System.out.println("table color : "+message);
 			dataOut.writeUTF(message);
 			dataOut.flush();
 		} catch (IOException e) {
@@ -246,25 +227,6 @@ public class RestaurantPane extends JPanel implements ActionListener, Colors{
 		}else if(colors[index]==3){
 			table[index].setBackground(Color.black);
 		}
-	}
-	public void makeTable(){
-		getTableOption();
-		if(tablechanged){
-			tpn.remove(tcard);
-			tpn.add("now",tcard);
-		}
-		else{
-			tpn.add("now",tcard);
-		}
-		for(int i = 0; i < side*side; i++){
-			table[i] = new JButton ();
-			table[i].setEnabled(false); // 처음에 버튼 클릭으로 설정 불가능 하도록 설정, 변경버튼을 통해 On/Off
-			table[i].setText(Integer.toString(i) + "번 테이블");
-			table[i].addActionListener(this);
-			tcard.add(table[i]);
-		}
-		// table 색 설정
-		setTable(table, side, colors);
 	}
 }
 

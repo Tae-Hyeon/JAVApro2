@@ -108,7 +108,6 @@ public class Select extends JPanel implements ActionListener{
 				item = stk.nextToken();
 	            for(int j = 0; j < combo.getItemCount() ; j++)
 	            {
-	            	System.out.println(item +" : "+ combo.getItemAt(j).toString());
 		            String str = combo.getItemAt(j).toString();
 	                if(item.compareTo(str) == 0)
 	                {
@@ -149,8 +148,11 @@ public class Select extends JPanel implements ActionListener{
 			try {
 				dataOut.writeUTF(message);
 				dataOut.flush();
-				Init.getContentPane().add(restaurant, new GuestPane(Init, socket));
+				GuestPane gp = new GuestPane(Init, socket, restaurant);
+				Init.getContentPane().add(restaurant, gp);
 				Init.getCardLayout().show(Init.getContentPane(), restaurant);
+				gp.start();
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

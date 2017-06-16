@@ -2,11 +2,11 @@ package IWannaEat.info;
 
 import java.io.Serializable;
 
-public class Option extends Color implements Serializable{
+public class Option implements Serializable, Colors{
 	private String id;
 	private String name;
 	private int side;
-	private int table[];
+	private int table[] = new int[25];
 	
 	public String getId() {
 		return id;

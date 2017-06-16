@@ -18,10 +18,11 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
 import IWannaEat.info.Member;
+import IWannaEat.info.Option;
 
 public class GuestHandler implements Runnable{
 	protected Socket socket;
-
+	
 	/**
 	 * 생성자 : InitHandler() 
 	 * 생성자는 클라이언트로부터 들어온 연결을 맡은 
@@ -81,22 +82,33 @@ public class GuestHandler implements Runnable{
 	// 쓰레드의 실행이 가장 먼저 시작되는 부분
 	//
 
+	private Option PreOp = new Option();
+	private Option NewOp = new Option();
+	private boolean opchecked = false;
+	private String resId = null;
+	
 	public void run() {
 		
 		try {
+			
 			String action = null;
 			String message = null;
-			String retaurant = null;
+			String restaurant = null;
 			while (!Thread.interrupted()) {
 				message = dataIn.readUTF();
+				System.out.println("message : "+message);
 				StringTokenizer stk = new StringTokenizer(message, "|");
 				action = stk.nextToken();
 				if(action.equals("upload")){
 					pushList();
 				}
 				else if(action.equals("select")){
-					retaurant = stk.nextToken();
-					
+					restaurant = stk.nextToken();
+					saveSelectResId(restaurant);
+				}
+				else if(action.equals("getOption")){
+					restaurant=stk.nextToken();
+					pushOption(restaurant);
 				}
 			}
 		} catch (IOException e) {
@@ -107,6 +119,7 @@ public class GuestHandler implements Runnable{
 		}
 	}
 	
+	//list 정보를 ComboBox에서 Guest가 선택할 수 있도록 보냄    
 	public void pushList(){
 		File listDir = new File("./src/IWannaEat/info/uplist");
 		String fList[] = listDir.list();
@@ -126,7 +139,69 @@ public class GuestHandler implements Runnable{
 		}
 	}
 	
-	public void pushOption(){
+	public void pushOption(String retaurant){
+		String message = null;
 		
+		try{
+			File dir = new File("./src/IWannaEat/info/option");
+			String opPath = "./src/IWannaEat/info/option/" + resId + ".option";
+			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(opPath));
+			// 처음에만 PreOp에 저장 그 후 NewOp에 저장해 전과 비교
+			System.out.println(opPath +":"+ opchecked);
+			if(opchecked)
+				NewOp = (Option) ois.readObject();
+			else
+				PreOp = (Option) ois.readObject();
+			
+			ois.close();
+			// 옵션을 주기적으로 체크할 때 옵션이 바뀌었나 안바뀌었나 체크한다.
+			if(opchecked){
+				if(PreOp.equals(NewOp))
+					message = "same|";
+				else{
+					message = "differ|";
+					message += Integer.toString(PreOp.getSide()) + "|" + PreOp.getName();
+					for(int i = 0; i < PreOp.getSide()*PreOp.getSide(); i++)
+						message += "|" + PreOp.getTable(i); 
+					PreOp = NewOp;
+				}
+			}
+			// 처음은 무조건 PreOp만 다룬다.
+			else{
+				message = "first|";
+				message += Integer.toString(PreOp.getSide()) + "|" + PreOp.getName();
+				for(int i = 0; i < PreOp.getSide()*PreOp.getSide(); i++)
+					message += "|" + PreOp.getTable(i); 
+				opchecked = true;
+			}
+			dataOut.writeUTF(message);
+			dataOut.flush();
+			System.out.println("table option pushed... : " + message);
+		} catch (EOFException ee){
+			System.out.println("출력 스트림을 닫아주세요.");
+			ee.printStackTrace();
+		} catch (IOException ie) {
+			ie.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			System.out.println("getOption - Option클래스를 찾을 수 없습니다.");
+			e.printStackTrace();
+		}
+	}
+	
+	public void saveSelectResId(String restaurant){
+		File list = new File("./src/IWannaEat/info/uplist/"+restaurant+".list");
+		ObjectInputStream ois;
+		try {
+			ois = new ObjectInputStream(new FileInputStream(list));
+			resId = (String) ois.readObject();
+			ois.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		System.out.println("식당 id : " + resId);
 	}
 }

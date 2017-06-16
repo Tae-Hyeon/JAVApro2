@@ -180,8 +180,8 @@ public class LoginPane extends JPanel implements ActionListener{
 						//TODO: 로그인 완료 -- 가게 객체 생성  xx option이 있는지 없는지도 스트림으로 받아서 그것에 따라 생성 처리
 						isSet = stk.nextToken();
 						if(isSet.equals("setted")){
-							Init.getContentPane().add("SetOption", new SetOption(Init, socket));
-							Init.getContentPane().add("Restaurant", new RestaurantPane(Init, socket));
+							RestaurantPane res = new RestaurantPane(Init, socket);
+							Init.getContentPane().add("Restaurant", res);
 							Init.getCardLayout().show(Init.getContentPane(), "Restaurant");
 						}
 						else if(isSet.equals("not setted")){

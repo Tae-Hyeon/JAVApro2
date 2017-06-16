@@ -187,7 +187,6 @@ public class InitHandler implements Runnable {
 										else{
 											outmessage += "|" + "not setted";
 										}
-									//	File rtListFile = new File("./src/IWannaEat/info/uplist/" + member.getId() + ".list");
 									}
 								}
 								else

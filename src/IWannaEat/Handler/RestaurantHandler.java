@@ -91,6 +91,7 @@ public class RestaurantHandler implements Runnable{
 			String retaurant = null;
 			while (!Thread.interrupted()) {
 				message = dataIn.readUTF();
+				System.out.println("get message : "+ message);
 				StringTokenizer stk = new StringTokenizer(message, "|");
 				action = stk.nextToken();
 				if(action.equals("setoption")){
@@ -106,6 +107,12 @@ public class RestaurantHandler implements Runnable{
 					String name = stk.nextToken();
 					setTableOp(side, name, stk);
 				}
+				else if(action.equals("listUp")){
+					listUp();
+				}
+				else if(action.equals("listDown")){
+					listDown();
+				}
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -115,6 +122,7 @@ public class RestaurantHandler implements Runnable{
 		}
 	}
 	
+	//처음 로그인 했을 때, 옵션을 바꿨을 때 테이블 구성 --> 무조건 하얀색으로 테이블을 구성 
 	public void setOption(int side, String name){
 		Op = new Option();
 		Op.setId(id);
@@ -123,6 +131,7 @@ public class RestaurantHandler implements Runnable{
 		for(int i = 0; i < side * side; i++)
 			Op.setTable(Op.white, i);
 		
+		//옵션 객체에 저장을 하고 오브젝트 아웃풋으로 파일저장
 		try{
 			File dir = new File("./src/IWannaEat/info/option");
 			String opPath = "./src/IWannaEat/info/option/" + Op.getId() + ".option";
@@ -142,6 +151,8 @@ public class RestaurantHandler implements Runnable{
 		}
 	}
 	
+	//테이블 옵션(색깔)을 변경한 후 테이블 변경을 눌렀을 때 실행
+	//테이블의 색깔을 숫자로 저장하여 (Color interface로 의미 정의) 객체에 저장
 	public void setTableOp(int side, String name, StringTokenizer stk){
 		int color = 0;
 		
@@ -173,6 +184,7 @@ public class RestaurantHandler implements Runnable{
 		}
 	}
 	
+	// 테이블을 구성할 시 옵션을 받아옴, 오브젝트 입출력으로 저장되어있는 option파일을 불러와서 "|"을 구분자로 데이터를 보냄
 	public void pushOption(){
 		Op = new Option();
 		String message = null;
@@ -188,6 +200,7 @@ public class RestaurantHandler implements Runnable{
 				message += "|" + Op.getTable(i); 
 			dataOut.writeUTF(message);
 			dataOut.flush();
+			System.out.println("table option pushed... : " + message);
 		} catch (EOFException ee){
 			System.out.println("출력 스트림을 닫아주세요.");
 			ee.printStackTrace();
@@ -199,6 +212,8 @@ public class RestaurantHandler implements Runnable{
 		}
 	}
 	
+	//로그인시 손님객체에서 가게를 선택할 수 있도록 list파일을 만든다. 
+	//listfile에 id를 저장해 GuestHandler에서 가게 id로 저장된 option파일을 찾을 수 있도록 함
 	public void listUp(){
 		Op = new Option();
 		String opPath = "./src/IWannaEat/info/option/" + id + ".option";
@@ -215,8 +230,11 @@ public class RestaurantHandler implements Runnable{
 			Op = (Option)ois.readObject();
 			name = Op.getName();
 			File list = new File(listDir, name+".list");
-			
+			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(list));
+			oos.writeObject(Op.getId());
+			System.out.println("listup..");
 			ois.close();
+			oos.close();
 		}catch (EOFException ee){
 			System.out.println("딥력 스트림을 닫아주세요.");
 			ee.printStackTrace();
@@ -227,6 +245,8 @@ public class RestaurantHandler implements Runnable{
 			e.printStackTrace();
 		}
 	}
+	
+	//로그아웃 시, 옵션을 변경하는 잠깐의 시간동안 list에서 내린다.
 	public void listDown(){
 		Op = new Option();
 		String opPath = "./src/IWannaEat/info/option/" + id + ".option";
